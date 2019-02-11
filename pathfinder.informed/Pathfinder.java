@@ -2,9 +2,9 @@ package pathfinder.informed;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Queue;
-import java.util.LinkedList;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Comparator;
 
 /**
  * Maze Pathfinding algorithm that implements a basic, uninformed, breadth-first tree search.
@@ -20,39 +20,48 @@ public class Pathfinder {
      * @return An ArrayList of Strings representing actions that lead from the initial to
      * the goal state, of the format: ["R", "R", "L", ...]
      */
-    public static ArrayList<String> solve (MazeProblem problem) {
-        // [!] Note: Hyper-Commenting below for illustrative purposes; you should not have
-        // had / needed nearly as much as demonstrated below
+    public static ArrayList<String> solve (MazeProblem problem) {   
+    	
+    	Comparator<SearchTreeNode> compareCosts = new Comparator<SearchTreeNode>() {
+    		@Override
+    		public int compare(SearchTreeNode node1, SearchTreeNode node2) {
+        		if (problem.getCost(node1.state) > problem.getCost(node2.state)) {
+        			return 1;
+        		}
+        		if (problem.getCost(node1.state) < problem.getCost(node2.state)) {
+        			return -1;
+        		}
+        		return 0;
+        	};	
+    	};
         
-        // Implementing BFS, so frontier is a Queue (which, in JCF, is an interface that
-        // can be used atop a LinkedList implementation)
-        Queue<SearchTreeNode> frontier = new LinkedList<>();
+        PriorityQueue<SearchTreeNode> frontier = new PriorityQueue<SearchTreeNode>(compareCosts);
         
-        // Add initial state to frontier
         frontier.add(new SearchTreeNode(problem.INITIAL_STATE, null, null));
+        int heuristic = 0;
         
-        // Continue expanding nodes as long as the frontier is not empty
-        // (not strictly necessary for this assignment because a solution was
-        // always assumed to be
-        while (!frontier.isEmpty()) {
-            // Grab the front node of the queue - this is the node we're expanding
-            SearchTreeNode expanding = frontier.poll();
-            
-            // If it's a goal state, we're done!
-            if (problem.isGoal(expanding.state)) {
-                return getPath(expanding);
-            }
-            
-            // Otherwise, must generate children
-            Map<String, MazeState> transitions = problem.getTransitions(expanding.state);
-            // For each action:MazeState pair in the transitions...
-            for (Map.Entry<String, MazeState> transition : transitions.entrySet()) {
-                // ...create a new STN and add that to the frontier
-                frontier.add(new SearchTreeNode(transition.getValue(), transition.getKey(), expanding));
-            }
+        boolean foundKey = false;
+        
+        while (!frontier.isEmpty() && (!foundKey)) {
+        	SearchTreeNode current = frontier.poll();
+        	
+        	heuristic += problem.getCost(current.state);
+        	
+        	if (problem.isKey(current.state)) {
+        		foundKey = true; 
+        	}
+        	
+        	if(problem.isGoal(current.state) && foundKey) {
+        		return getPath(current);
+        	}
+        	
+        	Map<String, MazeState> transitions = problem.getTransitions(current.state);
+        	for (Map.Entry<String, MazeState> transition : transitions.entrySet()) {
+        		frontier.add(new SearchTreeNode(transition.getValue(), transition.getKey(), current));
+        	}
         }
-        
         return null;
+        
     }
     
     /**
@@ -95,5 +104,9 @@ class SearchTreeNode {
         this.action = action;
         this.parent = parent;
     }
+    
+    // Helper Methods
+    //-----------------------------------------------------------------------------
+    
     
 }
