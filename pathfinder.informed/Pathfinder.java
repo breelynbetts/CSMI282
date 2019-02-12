@@ -1,16 +1,20 @@
 package pathfinder.informed;
 
 import java.util.ArrayList;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Comparator;
+import java.util.HashSet;
 
 /**
  * Maze Pathfinding algorithm that implements a basic, uninformed, breadth-first tree search.
  */
 public class Pathfinder {
-    
+	
+	
+	
     /**
      * Given a MazeProblem, which specifies the actions and transitions available in the
      * search, returns a solution to the problem as a sequence of actions that leads from
@@ -20,47 +24,30 @@ public class Pathfinder {
      * @return An ArrayList of Strings representing actions that lead from the initial to
      * the goal state, of the format: ["R", "R", "L", ...]
      */
+	
     public static ArrayList<String> solve (MazeProblem problem) {   
+    	if( problem.KEY_STATE.size() == 0 ) {
+    		return null;
+    	} 
+    	if (problem.GOAL_STATE.size() == 0 ) {
+    		return null;
+    	}
+    	ArrayList<String> path = new ArrayList<>();
     	
-    	Comparator<SearchTreeNode> compareCosts = new Comparator<SearchTreeNode>() {
-    		@Override
-    		public int compare(SearchTreeNode node1, SearchTreeNode node2) {
-        		if (problem.getCost(node1.state) > problem.getCost(node2.state)) {
-        			return 1;
-        		}
-        		if (problem.getCost(node1.state) < problem.getCost(node2.state)) {
-        			return -1;
-        		}
-        		return 0;
-        	};	
-    	};
+    	MazeState keyState = null;
+    	
+    	for (MazeState hashKey : problem.KEY_STATE) {
+    		keyState = hashKey;
+    	}
+    	path.addAll(solve(problem, problem.INITIAL_STATE, problem.KEY_STATE));
+    	if( path.isEmpty() ) {
+    		return null;
+    	}
+    	
+    	path.addAll( solve(problem, keyState, problem.GOAL_STATE));
+    	
         
-        PriorityQueue<SearchTreeNode> frontier = new PriorityQueue<SearchTreeNode>(compareCosts);
-        
-        frontier.add(new SearchTreeNode(problem.INITIAL_STATE, null, null));
-        int heuristic = 0;
-        
-        boolean foundKey = false;
-        
-        while (!frontier.isEmpty() && (!foundKey)) {
-        	SearchTreeNode current = frontier.poll();
-        	
-        	heuristic += problem.getCost(current.state);
-        	
-        	if (problem.isKey(current.state)) {
-        		foundKey = true; 
-        	}
-        	
-        	if(problem.isGoal(current.state) && foundKey) {
-        		return getPath(current);
-        	}
-        	
-        	Map<String, MazeState> transitions = problem.getTransitions(current.state);
-        	for (Map.Entry<String, MazeState> transition : transitions.entrySet()) {
-        		frontier.add(new SearchTreeNode(transition.getValue(), transition.getKey(), current));
-        	}
-        }
-        return null;
+        return path;
         
     }
     
@@ -72,6 +59,7 @@ public class Pathfinder {
      * @return ArrayList sequence of actions; solution of format ["U", "R", "U", ...]
      */
     private static ArrayList<String> getPath (SearchTreeNode last) {
+  
         ArrayList<String> result = new ArrayList<>();
         for (SearchTreeNode current = last; current.parent != null; current = current.parent) {
             result.add(current.action);
@@ -79,6 +67,64 @@ public class Pathfinder {
         Collections.reverse(result);
         return result;
     }
+
+    // Helper Methods
+    //------------------------------------------------------------------------------
+    
+    private static int getHeuristic(MazeState current, HashSet<MazeState> goalState) {
+    	int currCost = 0;
+    	int lowestCost = Integer.MAX_VALUE;
+    	for (MazeState goal: goalState) {
+    		currCost = Math.abs(current.col - goal.col ) + Math.abs(current.row - goal.row);
+    		if (currCost < lowestCost) {
+    			lowestCost = currCost;
+    		}
+    	}
+    	return currCost;
+    }
+    
+    private static int getHistory(SearchTreeNode parent, MazeState current, MazeProblem problem) {
+    	return parent.history + problem.getCost(current);
+    }
+
+    private static Comparator<SearchTreeNode> compareCosts = (stn1, stn2) -> {
+		return stn1.evaluate() - stn2.evaluate();
+	};
+	
+    private static ArrayList<String> solve(MazeProblem p, MazeState s, HashSet<MazeState> dests) {
+    	
+    	PriorityQueue<SearchTreeNode> frontier = new PriorityQueue<>(compareCosts);
+        HashSet<SearchTreeNode> graveyard = new HashSet<>();
+        SearchTreeNode curr = new SearchTreeNode(s, null, null, 0, 0 );
+        
+        frontier.add(curr);
+        
+        while(!frontier.isEmpty()) {
+        	
+        	curr = frontier.poll();
+        	graveyard.add(curr);
+
+        	if (dests == p.KEY_STATE) {
+        		if (p.isKey(curr.state)) {
+        			return getPath(curr);
+        		}
+        	} else if (dests == p.GOAL_STATE) {
+        		if ( p.isGoal(curr.state)) {
+        			return getPath(curr);
+        		}
+        	}
+        	
+        	Map<String, MazeState> transitions = p.getTransitions(curr.state);
+        	for (Map.Entry<String, MazeState> transition : transitions.entrySet()) {
+        		SearchTreeNode child = new SearchTreeNode(transition.getValue(), transition.getKey(), curr, 
+        				getHistory(curr, transition.getValue(), p), getHeuristic(curr.state, dests) );
+        		if (!frontier.contains(child)) {
+        			frontier.add(child);
+        		}
+        }  
+      } return null;
+        
+    } 
     
 }
 
@@ -91,6 +137,8 @@ class SearchTreeNode {
     MazeState state;
     String action;
     SearchTreeNode parent;
+    int history;
+    int heuristic; 
     
     /**
      * Constructs a new SearchTreeNode to be used in the Search Tree.
@@ -99,14 +147,17 @@ class SearchTreeNode {
      * @param action The action that *led to* this state / node.
      * @param parent Reference to parent SearchTreeNode in the Search Tree.
      */
-    SearchTreeNode (MazeState state, String action, SearchTreeNode parent) {
+    SearchTreeNode (MazeState state, String action, SearchTreeNode parent, int history, int heuristic) {
         this.state = state;
         this.action = action;
         this.parent = parent;
+        this.history = history;
+        this.heuristic = heuristic;
     }
     
-    // Helper Methods
-    //-----------------------------------------------------------------------------
-    
+  
+    public int evaluate() {
+    	return history + heuristic; 
+    }
     
 }
