@@ -3,6 +3,7 @@ package pathfinder.informed;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Specifies the Maze Grid pathfinding problem including the actions, transitions,
@@ -15,8 +16,10 @@ public class MazeProblem {
     // -----------------------------------------------------------------------------
     private String[] maze;
     private int rows, cols;
-    public final MazeState INITIAL_STATE, GOAL_STATE, KEY_STATE;
+    public final MazeState INITIAL_STATE;
+    public final HashSet<MazeState> KEY_STATE, GOAL_STATE;
     private static final Map<String, MazeState> TRANS_MAP = createTransitions();
+    public boolean keyFound;
     
     /**
      * @return Creates the transition map that maps String actions to 
@@ -59,7 +62,10 @@ public class MazeProblem {
         this.maze = maze;
         this.rows = maze.length;
         this.cols = (rows == 0) ? 0 : maze[0].length();
-        MazeState foundInitial = null, foundGoal = null, foundKey = null;
+        MazeState foundInitial = null; 
+        HashSet<MazeState> foundKey = new HashSet<>();
+        HashSet<MazeState> foundGoal = new HashSet<>();
+        keyFound = false;
         
         // Find the initial and goal state in the given maze, and then
         // store in fields once found
@@ -69,13 +75,13 @@ public class MazeProblem {
                 case 'I':
                     foundInitial = new MazeState(col, row); break;
                 case 'G':
-                    foundGoal = new MazeState(col, row); break;
+                    foundGoal.add(new MazeState(col, row)); break;
                 case '.':
                 case 'M':
                 case 'X':
                     break;
                 case 'K': 
-                	foundKey = new MazeState(col,row); break;
+                	foundKey.add(new MazeState(col,row)); break;
                 default:
                     throw new IllegalArgumentException("Maze formatted invalidly");
                 }
@@ -113,10 +119,11 @@ public class MazeProblem {
      * @return Boolean of whether or not the given state is a Goal.
      */
     public boolean isGoal (MazeState state) {
-        return state.equals(GOAL_STATE);
+        return GOAL_STATE.contains(state);
     }
+    // NEED TO MAKE IT SO THAT IT IS COMPATIBLE WITH HASH SET
     public boolean isKey(MazeState state) {
-    	return state.equals(KEY_STATE);
+    	return KEY_STATE.contains(state);
     }
     
     /**
