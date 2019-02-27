@@ -10,6 +10,8 @@ import java.util.Map;
 public class NimPlayer {
     
     private final int MAX_REMOVAL;
+    private int min = Integer.MIN_VALUE;
+    private int max = Integer.MAX_VALUE;
     
     NimPlayer (int MAX_REMOVAL) {
         this.MAX_REMOVAL = MAX_REMOVAL;
@@ -22,6 +24,7 @@ public class NimPlayer {
      *          of [1, MAX_REMOVAL]
      */
     public int choose (int remaining) {
+    	
         throw new UnsupportedOperationException();
     }
     
@@ -37,7 +40,39 @@ public class NimPlayer {
      *          from the given node
      */
     private int alphaBetaMinimax (GameTreeNode node, int alpha, int beta, boolean isMax, Map<GameTreeNode, Integer> visited) {
-        throw new UnsupportedOperationException();
+        int score;
+    	if (isMax) {
+    		score = min;
+    		for (GameTreeNode child : node.children) {
+    			if (!visited.equals(child)) {
+    				score = max(score, alphaBetaMinimax(child, alpha, beta, false, visited));
+    				alpha = max(score, alpha);
+    				if (beta <= alpha) { break; }
+    			}	
+    		} return score;
+    	} else {
+    		score = max;
+    		for (GameTreeNode child : node.children) {
+    			if (!visited.equals(node.children)) {
+    				score = min(score, alphaBetaMinimax(child, alpha, beta, false, visited));
+    				beta = min (score, beta);
+    				if (beta <= alpha) { break; } 
+    			}
+    		} return score;
+    	}
+    
+    }
+    
+    
+    // Helper Methods:
+    //----------------------------------------------------------------------------------------------------
+    
+    public static int min (int curr, int comp) {
+    	throw new IllegalArgumentException();
+    }
+    
+    public static int max (int curr, int comp) {
+    	throw new IllegalArgumentException();
     }
 
 }
