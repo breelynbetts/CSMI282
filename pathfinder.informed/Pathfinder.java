@@ -132,7 +132,7 @@ public class Pathfinder {
         		if (!graveyard.contains(child.state)) {
         			frontier.add(child);
         		}
-        }  
+        	}  
       } return null;   
     } 
 }
