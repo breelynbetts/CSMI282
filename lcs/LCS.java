@@ -16,8 +16,19 @@ public class LCS {
 	// Shared Helper Methods
 	// -----------------------------------------------
 
-	// [!] TODO: Add your shared helper methods here!
-
+	// SHARED HELPER METHODS!
+	
+	/**
+	 * The collectSolution method is used to recurse through the table to find the 
+	 * LCS for the strings checking.
+	 * 
+	 * @param rStr	The String found along the table's rows
+	 * @param r		The index of the row string in the table		   
+	 * @param cStr	The String found along the table's cols
+	 * @param c		The index of the col string in the table
+	 * @param memo 	The table we are finding the LCS for
+	 * @return A set of solutions for the table and parameters provided. 
+	 */
 	private static Set<String> collectSolution(String rStr, int r, String cStr, int c, int[][] memo) {
 		// Base Case
 		if (r == 0 || c == 0) {
@@ -46,6 +57,14 @@ public class LCS {
 		return newLCS;
 	}
 
+	/**
+	 * UpdatedLCS takes the previous set of strings and adds a new character. We employ this 
+	 * method to append the new character to the existing set of strings. 
+	 * 
+	 * @param adding	The character from the substring that we are adding to the set
+	 * @param LCS  		The already existing set of strings that contains result
+	 * @return			The modified set of strings that includes the new character. 
+	 */
 	private static Set<String> updatedLCS(char adding, Set<String> LCS) {
 		Set<String> copyLCS = new HashSet<String>();
 
@@ -53,10 +72,6 @@ public class LCS {
 			copyLCS.add(LC + Character.toString(adding));
 		}
 		return copyLCS;
-	}
-
-	private Set<String> executeLCS() {
-		throw new UnsupportedOperationException();
 	}
 
 	// -----------------------------------------------
@@ -81,6 +96,16 @@ public class LCS {
 	}
 
 	// BOTTOM-UP HELPER METHODS!
+	
+	/**
+	 * BottomUpTableFilling method fills the table using recurrence. Every coordinate in the table
+	 * is assigned a value. 
+	 * 
+	 * @param rStr The String found along the table's rows
+	 * @param cStr The String found along the table's cols
+	 * @param memo The table that we are filling out the values for 
+	 * @return A complete table filled with values related to the length of LCS.
+	 */
 	private static int[][] bottomUpTableFill(String rStr, String cStr, int[][] memo) {
 		memo = new int[rStr.length()][cStr.length()];
 
@@ -124,35 +149,33 @@ public class LCS {
 	 *         sets memoCheck to refer to table
 	 */
 	public static Set<String> topDownLCS(String rStr, String cStr) {
-		boolean[][] haveVisited = new boolean[rStr.length() + 1][cStr.length() + 1];
-		memoCheck = new int[rStr.length() + 1][cStr.length() + 1];
+		rStr = "0" + rStr;
+		cStr = "0" + cStr;
+		boolean[][] haveVisited = new boolean[rStr.length()][cStr.length()];
+		memoCheck = new int[rStr.length()][cStr.length()];
 		topDownTableFill(rStr, rStr.length() - 1, cStr, cStr.length() - 1, memoCheck, haveVisited);
-		return collectSolution(rStr, rStr.length() + 1, cStr, cStr.length() + 1, memoCheck);
+		return collectSolution(rStr, rStr.length() - 1, cStr, cStr.length() - 1, memoCheck);
 
 	}
 
 	// TOP-DOWN HELPER METHODS!
 
 	/**
-	 * TopDownTableFill fills in the table with values using a recursive
+	 * TopDownTableFill fills in the table with values using a 
+	 * recursive algorithm with memoization.
 	 * 
-	 * @param rStr The String found along the table's rows
-	 * @param cStr The String found along the table's cols
-	 * @param r
-	 * @param c
-	 * @return
+	 * @param rStr 		The String found along the table's rows
+	 * @param rIndex	The index of the current row
+	 * @param cStr   	The String found along the table's cols
+	 * @param cIndex 	The index of the current col
+	 * @param memo		The table that we are filling in 
+	 * @param visited	A table of the visited values, aids in memoization
+	 * @return The integer value at the current rIndex and cIndex. 
 	 */
-//    private static int[][] topDownTableFill (String rStr, String cStr, int r, int c) {
-//    	int[][] memo = new int[rStr.length()+ 1][cStr.length() + 1];
-//    	gutterRow(memo, rStr.length()+ 1, cStr.length() + 1);
-//    	memo = lcsRecursiveHelper(rStr, r, cStr, c, memo);
-//    	return memo;
-//    }
-
 	private static int topDownTableFill(String rStr, int rIndex, String cStr, int cIndex, int[][] memo,
 			boolean[][] visited) {
 
-		if (memo[rIndex][cIndex] == 0) {
+		if (rIndex == 0 || cIndex == 0) {
 			memo[rIndex][cIndex] = 0;
 			return 0;
 		}
@@ -168,7 +191,6 @@ public class LCS {
 			}
 			visited[rIndex][cIndex] = true;
 		}
-
 		return memo[rIndex][cIndex];
 	}
 }
