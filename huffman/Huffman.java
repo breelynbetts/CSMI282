@@ -1,6 +1,8 @@
 package huffman;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.PriorityQueue;
 
 /**
  * Huffman instances provide reusable Huffman Encoding Maps for
@@ -8,14 +10,14 @@ import java.util.Map;
  * distributions of characters.
  */
 public class Huffman {
-    
+
     // -----------------------------------------------
     // Construction
     // -----------------------------------------------
 
     private HuffNode trieRoot;
     private Map<Character, String> encodingMap;
-    
+
     /**
      * Creates the Huffman Trie and Encoding Map using the character
      * distributions in the given text corpus
@@ -25,15 +27,54 @@ public class Huffman {
      *        establishes the Encoding Map; later compressed corpi may
      *        differ.
      */
-    Huffman (String corpus) {
-        // TODO!
-    }
-    
-    
+	Huffman(String corpus) {
+		HashMap<Character, Integer> distributions = new HashMap<Character, Integer>();
+		// Created Hash map, iterated through corpus characters to find their
+		// frequencies
+		for (int i = 0; i < corpus.length(); i++) {
+			if (distributions.containsKey(corpus.charAt(i))) {
+				distributions.put(corpus.charAt(i), distributions.get(corpus.charAt(i) + 1));
+			} else {
+				distributions.put(corpus.charAt(i), 1);
+			}
+		}
+		// building the HuffmanTrie by creating priority queue and adding huffnode to
+		// pQueue
+		PriorityQueue<HuffNode> pQueue = new PriorityQueue<HuffNode>();
+		for (Map.Entry<Character, Integer> entry : distributions.entrySet()) {
+			HuffNode nodey = new HuffNode(entry.getKey(), entry.getValue());
+			pQueue.add(nodey);
+		}
+		// Construction of the HuffmanTrie
+		while (pQueue.size() > 1) {
+			HuffNode smallestProb = pQueue.poll();
+			HuffNode nextSmallest = pQueue.poll();
+			HuffNode parentNode = new HuffNode('\0', smallestProb.count + nextSmallest.count);
+			pQueue.add(parentNode);
+		}
+		trieRoot = pQueue.poll();
+		encodingMap(trieRoot, "");
+	}
+  
+
+	public void encodingMap(HuffNode n, String path) {
+		if (n.isLeaf()) {
+			encodingMap.put(n.character, path);
+			return;
+		}
+		if (!n.left.equals(null)) {
+    		encodingMap(n.left, path + "0");
+		}
+    	if (!n.right.equals(null)) {
+    		encodingMap(n.right, path + "1");
+    	}
+	}
+
+
     // -----------------------------------------------
     // Compression
     // -----------------------------------------------
-    
+
     /**
      * Compresses the given String message / text corpus into its Huffman coded
      * bitstring, as represented by an array of bytes. Uses the encodingMap
@@ -46,14 +87,14 @@ public class Huffman {
      *         0-padding on the final byte.
      */
     public byte[] compress (String message) {
-        throw new UnsupportedOperationException();
+    	throw new UnsupportedOperationException();
     }
-    
-    
+
+
     // -----------------------------------------------
     // Decompression
     // -----------------------------------------------
-    
+
     /**
      * Decompresses the given compressed array of bytes into their original,
      * String representation. Uses the trieRoot field (the Huffman Trie) that
@@ -66,14 +107,24 @@ public class Huffman {
      * @return Decompressed String representation of the compressed bytecode message.
      */
     public String decompress (byte[] compressedMsg) {
-        throw new UnsupportedOperationException();
+    	int firstByte = compressedMsg[0];
+    	String masterString = "";
+    	for(int i = 1; i < compressedMsg.length; i++) {
+    		String binaryString = Integer.toBinaryString(compressedMsg[i]);
+    		if(binaryString.length() > 8) {
+    			binaryString.substring(binaryString.length());
+    		}
+    		masterString = masterString + compressedMsg[i];
+    		
+    	}
+    	return masterString;
     }
-    
-    
+
+
     // -----------------------------------------------
     // Huffman Trie
     // -----------------------------------------------
-    
+
     /**
      * Huffman Trie Node class used in construction of the Huffman Trie.
      * Each node is a binary (having at most a left and right child), contains
@@ -82,24 +133,24 @@ public class Huffman {
      * the node's character (or those in its subtrees) appear in the corpus.
      */
     private static class HuffNode implements Comparable<HuffNode> {
-        
+
         HuffNode left, right;
         char character;
         int count;
-        
+
         HuffNode (char character, int count) {
             this.count = count;
             this.character = character;
         }
-        
+
         public boolean isLeaf () {
             return left == null && right == null;
         }
-        
+
         public int compareTo (HuffNode other) {
             return this.count - other.count;
         }
-        
+
     }
 
 }
