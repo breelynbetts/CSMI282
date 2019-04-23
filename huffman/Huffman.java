@@ -90,7 +90,22 @@ public class Huffman {
 	 *         byte.
 	 */
 	public byte[] compress(String message) {
-		throw new UnsupportedOperationException();
+		//uses the encodingMap
+		int mLength = message.length();
+		char[] mess = message.toCharArray();
+		String bitString = "";
+		for (int i = 0; i < mLength; i++) {
+			bitString += encodingMap.get(mess[i]);
+		}
+		if (bitString.length() % 8 != 0) {
+			
+			
+		}
+		System.out.println("bitString:" + bitString);
+		byte[] bite = {2};
+		return bite;
+		
+		
 	}
 
 	// -----------------------------------------------
