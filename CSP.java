@@ -48,7 +48,7 @@ public class CSP {
                 state.get(((BinaryDateConstraint) constraint).R_VAL).binaryConst.add((BinaryDateConstraint) constraint);
             }
         }
-        
+        System.out.println(backtracking(assignVals, state));
         return backtracking(assignVals, state);
     }
     
@@ -58,11 +58,10 @@ public class CSP {
         }
         int unassignedIndex = findUnassigned(assignment);
         PartialState unassigned = state.get(unassignedIndex);
-//        for(int i = 0; i < state.size(); i++) {
-//        	System.out.println(state.get(i).domain.toString());
-//        }
+
         for (LocalDate domain : unassigned.domain) {
             assignment.set(unassigned.index, domain);
+            System.out.println(assignment.get(unassigned.index));
             if (checkConstraints(unassigned, domain, assignment)) {
                 List<LocalDate> result = backtracking(assignment, state);
                 if (result != null) {
@@ -95,15 +94,19 @@ public class CSP {
     }
     private static boolean checkConstraints(PartialState party, LocalDate assigned, List<LocalDate> assignment) {
         for (UnaryDateConstraint unaryConstraints : party.unaryConst) {
-        	if(assigned == null ||  unaryConstraints.R_VAL == null) {
+        	if(assigned == null/* ||  unaryConstraints.R_VAL == null*/) {
         		continue;
         	}
-            if (!checkDates(unaryConstraints.OP, unaryConstraints.R_VAL, assigned)) {
+            if (!checkDates(unaryConstraints.OP, assigned, unaryConstraints.R_VAL)) {
                 return false;
             }
         }
         for (BinaryDateConstraint binaryConstraint : party.binaryConst) {
-        	if(assigned == null ||  party == null || assignment == null) {
+        	if(assigned == null 
+        			||  party == null) 
+//        			|| assignment.get(binaryConstraint.L_VAL) == null 
+//        			|| assignment.get(binaryConstraint.R_VAL) == null) 
+        	{
         		continue;
         	}
             if (!checkBinaryConstraint(binaryConstraint, assigned, party, assignment)) {
@@ -113,34 +116,34 @@ public class CSP {
         return true;
     }
     private static boolean checkDates(String operand, LocalDate day1, LocalDate day2) {
-    	
+    	boolean check = false;
         switch (operand) {
         case "==":
             if (day1.isEqual(day2))
-                return true;
+                check = true;
             break;
         case "!=":
             if (!day1.isEqual(day2))
-                return true;
+                check = true;
             break;
         case ">":
             if (day1.isAfter(day2))
-                return true;
+                check = true;
             break;
         case "<":
             if (day1.isBefore(day2))
-                return true;
+                check = true;
             break;
         case ">=":
             if (day1.isAfter(day2) || day1.isEqual(day2))
-                return true;
+                check = true;
             break;
         case "<=":
             if (day1.isBefore(day2) || day1.isEqual(day2))
-                return true;
+                check = true;
             break;
         }
-        return false;
+        return check;
     }
     
     private static List<PartialState> fillDomains(int nMeetings, LocalDate rangeStart, LocalDate rangeEnd){
@@ -163,17 +166,17 @@ public class CSP {
     private static boolean checkBinaryConstraint(BinaryDateConstraint constraint, LocalDate date, PartialState party,
             List<LocalDate> assignment) {
         if (party.index == constraint.L_VAL) {
-            if (assignment.get(constraint.R_VAL) == null) {
+            if (assignment.get(constraint.R_VAL) == null || date == null) {
                 return true;
             }
-            checkDates(constraint.OP, date, assignment.get(constraint.R_VAL));
+            return checkDates(constraint.OP, date, assignment.get(constraint.R_VAL));
         } else {
             if (assignment.get(constraint.L_VAL) == null) {
                 return true;
             }
-            checkDates(constraint.OP, assignment.get(constraint.L_VAL), date);
+            return checkDates(constraint.OP, assignment.get(constraint.L_VAL), date);
         }
-        return true;
+        
     }
     // change to variable
     private static class PartialState {
